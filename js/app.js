@@ -131,6 +131,22 @@
         return months;
     }
 
+    // Нормализация номера для сравнения (только цифры)
+    function normPhone(p) { return (p || '').replace(/\D/g, ''); }
+
+    // Множество нормализованных номеров, встречающихся больше одного раза
+    function buildDupPhones(rows) {
+        const counts = new Map();
+        for (const s of rows) {
+            const n = normPhone(s.phone);
+            if (!n) continue;
+            counts.set(n, (counts.get(n) || 0) + 1);
+        }
+        const dups = new Set();
+        for (const [n, c] of counts) if (c > 1) dups.add(n);
+        return dups;
+    }
+
     function groupByDay(items) {
         const days = new Map();
         for (const s of items) {
@@ -339,6 +355,8 @@
         const generated = new Date().toLocaleString('ru-RU');
         const total = rows.length;
         const monthsCount = groupByMonth(rows).size;
+        const dupPhones = buildDupPhones(rows);
+        const dupCount = rows.filter(s => dupPhones.has(normPhone(s.phone))).length;
 
         const doc = `<!DOCTYPE html>
 <html lang="ru">
@@ -352,9 +370,9 @@
 <div class="wrap">
 <header class="head">
 <h1>Актуализация номеров абонентов</h1>
-<div class="meta">Сформировано: ${escapeHtml(generated)} · Записей: ${total} · Месяцев: ${monthsCount}</div>
+<div class="meta">Сформировано: ${escapeHtml(generated)} · Записей: ${total} · Месяцев: ${monthsCount}${dupCount ? ` · Повторов номеров: ${dupCount}` : ''}</div>
 </header>
-${rows.length ? monthsHtml(rows, { actions: false }) : '<div class="empty">Нет записей.</div>'}
+${rows.length ? monthsHtml(rows, { actions: false, dupPhones }) : '<div class="empty">Нет записей.</div>'}
 </div>
 </body>
 </html>`;
@@ -386,6 +404,8 @@ td{padding:9px 18px;border-bottom:1px solid rgba(255,255,255,.10)}
 .day-row td{padding:7px 18px;background:color-mix(in srgb,var(--mc,#7c5cff) 14%,transparent);border-top:1px solid color-mix(in srgb,var(--mc,#7c5cff) 30%,transparent)}
 .day-name{font-weight:700;font-size:12px;color:color-mix(in srgb,var(--mc,#7c5cff) 55%,#ecedf5)}
 .day-count{margin-left:8px;font-size:11px;font-weight:600;color:#6c6e88}
+.phone-val{font-variant-numeric:tabular-nums}
+.dup-tag{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:#fbbf24;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.35);vertical-align:middle}
 ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
 `;
 
@@ -397,6 +417,7 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
     function monthsHtml(rows, opts) {
         opts = opts || {};
         const withActions = !!opts.actions;
+        const dupPhones = opts.dupPhones || new Set();
         const months = groupByMonth(rows);
         const monthKeys = Array.from(months.keys()).sort().reverse();
         const colSpan = withActions ? 4 : 3;
@@ -411,16 +432,25 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
                 const sep = `<tr class="day-row"><td colspan="${colSpan}">` +
                     `<span class="day-name">${escapeHtml(dayLabel(dg.date))}</span>` +
                     `<span class="day-count">${dg.items.length}</span></td></tr>`;
-                const rws = dg.items.map(s => `
+                const rws = dg.items.map(s => {
+                    const isDup = dupPhones.has(normPhone(s.phone));
+                    const dupTag = isDup
+                        ? '<span class="dup-tag" title="Этот номер встречается в базе несколько раз">дубль</span>'
+                        : '';
+                    const phoneCell = withActions
+                        ? `<td class="phone copyable" data-copy="${escapeHtml(s.phone)}" title="Нажмите, чтобы скопировать"><span class="phone-val">${escapeHtml(s.phone)}</span>${dupTag}</td>`
+                        : `<td class="phone"><span class="phone-val">${escapeHtml(s.phone)}</span>${dupTag}</td>`;
+                    return `
                     <tr${withActions && s.id === editingId ? ' class="is-editing"' : ''}>
                         <td>${escapeHtml(s.address)}</td>
                         <td>${escapeHtml(s.login)}</td>
-                        <td class="phone">${escapeHtml(s.phone)}</td>
+                        ${phoneCell}
                         ${withActions ? `<td class="sub-actions">` +
                             `<button class="row-btn row-edit" data-id="${s.id}" title="Редактировать">✎</button>` +
                             `<button class="row-btn row-delete" data-id="${s.id}" title="Удалить">✕</button>` +
                         `</td>` : ''}
-                    </tr>`).join('');
+                    </tr>`;
+                }).join('');
                 return sep + rws;
             }).join('');
 
@@ -460,6 +490,10 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
             );
         }
 
+        // Повторяющиеся номера — считаем по всей базе
+        const dupPhones = buildDupPhones(allRows);
+        const dupCount = allRows.filter(s => dupPhones.has(normPhone(s.phone))).length;
+
         // Сводка
         if (allRows.length) {
             const months = groupByMonth(allRows).size;
@@ -467,6 +501,7 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
             summary.innerHTML =
                 `<span><b>${allRows.length}</b> записей</span>` +
                 `<span>в <b>${months}</b> мес.</span>` +
+                (dupCount ? `<span class="dup-note">повторов номеров: <b>${dupCount}</b></span>` : '') +
                 (filter ? `<span>показано: <b>${rows.length}</b></span>` : '');
         } else {
             summary.hidden = true;
@@ -481,10 +516,13 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
             return;
         }
 
-        container.innerHTML = monthsHtml(rows, { actions: true });
+        container.innerHTML = monthsHtml(rows, { actions: true, dupPhones });
 
         container.querySelectorAll('.row-edit').forEach(btn => {
             btn.addEventListener('click', () => startEdit(btn.dataset.id));
+        });
+        container.querySelectorAll('.phone.copyable').forEach(cell => {
+            cell.addEventListener('click', () => copyToClipboard(cell.dataset.copy, cell));
         });
         container.querySelectorAll('.row-delete').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -515,6 +553,13 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
         }
         if (!date) date = todayISO();
 
+        // Ненавязчивое предупреждение: такой номер уже есть в базе
+        // (саму запись всё равно сохраняем — решает пользователь).
+        const dupExists = Store.all().some(s =>
+            s.id !== editingId && normPhone(s.phone) && normPhone(s.phone) === normPhone(phone)
+        );
+        if (dupExists) toast('Внимание: такой номер уже есть в базе', 'warning');
+
         if (editingId) {
             Store.update(editingId, { address, login, phone, date });
             exitEditMode();
@@ -530,6 +575,37 @@ ${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
         if (opts.focus) document.getElementById('f-address').focus();
         render();
         saveExcel({ notify: true });
+    }
+
+    // Копирование номера в буфер обмена + короткая подсветка ячейки
+    function copyToClipboard(text, cell) {
+        const done = () => {
+            if (cell) {
+                cell.classList.add('copied');
+                setTimeout(() => cell.classList.remove('copied'), 900);
+            }
+            toast('Номер скопирован', 'success', 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+        } else {
+            fallbackCopy(text, done);
+        }
+    }
+    function fallbackCopy(text, done) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            done();
+        } catch (e) {
+            toast('Не удалось скопировать', 'error');
+        }
     }
 
     function clearForm() {

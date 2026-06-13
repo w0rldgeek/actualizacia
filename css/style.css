@@ -77,8 +77,8 @@ body {
 .brand-mark {
     width: 12px; height: 26px;
     border-radius: 5px;
-    background: var(--brand-grad);
-    box-shadow: 0 8px 24px -8px var(--brand-1);
+    background: color-mix(in srgb, var(--brand-1) 55%, var(--surface-strong));
+    border: 1px solid color-mix(in srgb, var(--brand-1) 40%, transparent);
 }
 .brand-text {
     font-size: clamp(15px, 2.4vw, 18px);
@@ -227,13 +227,17 @@ input[type="date"] { color-scheme: dark; }
 }
 .btn:hover { border-color: var(--stroke-strong); background: var(--surface); transform: translateY(-1px); }
 .btn:active { transform: translateY(1px) scale(0.99); }
+/* Главная кнопка — приглушённая, без яркого градиента и свечения */
 .btn-primary {
-    color: #fff;
-    background: var(--brand-grad);
-    border-color: transparent;
-    box-shadow: 0 10px 26px -10px var(--brand-1);
+    color: #dcd9ff;
+    background: color-mix(in srgb, var(--brand-1) 22%, var(--surface-strong));
+    border-color: color-mix(in srgb, var(--brand-1) 42%, transparent);
 }
-.btn-primary:hover { box-shadow: 0 14px 32px -10px var(--brand-1); transform: translateY(-1px); }
+.btn-primary:hover {
+    background: color-mix(in srgb, var(--brand-1) 32%, var(--surface-strong));
+    border-color: color-mix(in srgb, var(--brand-1) 60%, transparent);
+    transform: translateY(-1px);
+}
 .btn-sm { padding: 6px 10px; font-size: 12px; }
 
 /* ============================================================
@@ -336,6 +340,29 @@ input[type="date"] { color-scheme: dark; }
 }
 .data-table .phone { font-variant-numeric: tabular-nums; font-weight: 600; }
 th.phone, td.phone { white-space: nowrap; }
+
+/* Номер можно скопировать кликом */
+td.phone.copyable { cursor: copy; }
+td.phone .phone-val { transition: color 0.15s ease; }
+td.phone.copyable:hover .phone-val { color: var(--brand-2); }
+td.phone.copied .phone-val { color: var(--success); }
+
+/* Метка повторяющегося номера — спокойная, не мешает */
+.dup-tag {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+    vertical-align: middle;
+}
+.summary .dup-note { color: var(--warning); }
 
 /* Разделитель дня */
 .day-row td {
