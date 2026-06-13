@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Актуализация номеров абонентов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <span class="brand-mark"></span>
+                <span class="brand-text">Актуализация номеров абонентов</span>
+            </div>
+            <div class="topbar-actions">
+                <span id="excel-status" class="badge">Excel не привязан</span>
+                <div class="btn-group">
+                    <input type="file" id="file-import" accept=".xlsx" hidden>
+                    <button class="btn" id="btn-import" title="Загрузить данные из .xlsx">Загрузить Excel</button>
+                    <button class="btn" id="btn-export-xlsx" title="Выгрузить в .xlsx">Выгрузить Excel</button>
+                    <button class="btn" id="btn-export-html" title="Выгрузить в .html">Выгрузить HTML</button>
+                </div>
+                <button class="btn btn-primary" id="btn-link" title="Привязать файл для авто-записи (Chrome/Edge)">Привязать Excel</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Форма добавления -->
+        <section class="card">
+            <div class="subscriber-form">
+                <div class="field field-address">
+                    <label for="f-address">Адрес</label>
+                    <input type="text" id="f-address" autocomplete="off">
+                </div>
+                <div class="field">
+                    <label for="f-login">Логин</label>
+                    <input type="text" id="f-login" autocomplete="off">
+                </div>
+                <div class="field field-date">
+                    <label for="f-date">Дата</label>
+                    <input type="date" id="f-date">
+                </div>
+                <div class="field">
+                    <label for="f-phone">Номер телефона</label>
+                    <input type="text" id="f-phone" autocomplete="off">
+                </div>
+                <button class="btn btn-primary field-add" id="btn-add" type="button">Добавить</button>
+            </div>
+            <div class="form-bottom">
+                <span class="form-hint"><kbd>Enter</kbd> в любом поле — строка добавляется и уходит в Excel.</span>
+                <input type="text" id="f-filter" class="filter-input" placeholder="Поиск по адресу / логину / номеру…">
+            </div>
+        </section>
+
+        <!-- Сводка -->
+        <div id="summary" class="summary" hidden></div>
+
+        <!-- Данные по месяцам и дням -->
+        <section id="table-container">
+            <div class="empty-state">Загрузка…</div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

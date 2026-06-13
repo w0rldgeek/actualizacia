@@ -1,0 +1,383 @@
+/* ============================================================
+   Актуализация номеров абонентов — рабочий интерфейс
+   Спокойная светлая тема, компактная вёрстка, приглушённые
+   цвета месяцев (различимы, но не кричат). Разделение по дням.
+   ============================================================ */
+
+:root {
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --surface-soft: #f7f8fa;
+    --stroke: #e3e7ec;
+    --stroke-strong: #d2d8e0;
+
+    --text: #1f2733;
+    --text-dim: #5a6675;
+    --text-muted: #8a94a3;
+
+    --accent: #3f6491;          /* спокойный синий — основной */
+    --accent-soft: #eef2f7;
+
+    --success: #4f8a6b;
+    --danger: #b4544f;
+    --warning: #b08a3e;
+
+    --radius: 10px;
+    --radius-sm: 7px;
+    --shadow: 0 1px 2px rgba(20, 30, 45, 0.06), 0 1px 3px rgba(20, 30, 45, 0.05);
+
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font);
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--text);
+    background: var(--bg);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--surface);
+    border-bottom: 1px solid var(--stroke);
+}
+.topbar-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+    width: 10px; height: 22px;
+    border-radius: 3px;
+    background: var(--accent);
+}
+.brand-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: var(--text);
+}
+.topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.container {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 20px 22px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ============================================================
+   CARD
+   ============================================================ */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.subscriber-form {
+    display: grid;
+    grid-template-columns: 2.2fr 1.2fr 150px 1.2fr auto;
+    gap: 12px;
+    align-items: end;
+}
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-dim);
+}
+input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 9px 11px;
+    background: var(--surface);
+    border: 1px solid var(--stroke-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input::placeholder { color: var(--text-muted); }
+input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.field-add { height: 38px; }
+
+.form-bottom {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--stroke);
+}
+.form-hint { font-size: 12px; color: var(--text-muted); }
+.form-hint kbd {
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--surface-soft);
+    border: 1px solid var(--stroke-strong);
+    color: var(--text-dim);
+}
+.filter-input { max-width: 340px; flex: 1; min-width: 200px; }
+
+@media (max-width: 920px) {
+    .subscriber-form { grid-template-columns: 1fr 1fr; }
+    .field-add { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+    .subscriber-form { grid-template-columns: 1fr; }
+    .filter-input { max-width: none; }
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--stroke-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-family: var(--font);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn:hover { background: var(--surface-soft); border-color: var(--text-muted); color: var(--text); }
+.btn:active { transform: translateY(0.5px); }
+.btn-primary {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); border-color: transparent; color: #fff; }
+
+/* ============================================================
+   BADGE / STATUS
+   ============================================================ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: var(--surface-soft);
+    border: 1px solid var(--stroke);
+    color: var(--text-dim);
+}
+.badge.linked {
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+    color: var(--success);
+}
+
+/* ============================================================
+   SUMMARY
+   ============================================================ */
+.summary {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 2px 2px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+}
+.summary b { color: var(--text); font-weight: 700; }
+
+/* ============================================================
+   MONTH CARDS + TABLE
+   ============================================================ */
+#table-container { display: flex; flex-direction: column; gap: 14px; }
+
+.month-card {
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-left: 3px solid var(--month-color, var(--accent));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+.month-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 16px;
+    background: color-mix(in srgb, var(--month-color, var(--accent)) 8%, var(--surface));
+    border-bottom: 1px solid var(--stroke);
+}
+.month-card-header h3 {
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+    color: color-mix(in srgb, var(--month-color, var(--accent)) 70%, var(--text));
+}
+.month-total {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--month-color, var(--accent)) 16%, transparent);
+    color: color-mix(in srgb, var(--month-color, var(--accent)) 65%, var(--text));
+}
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead th {
+    text-align: left;
+    padding: 7px 16px;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--stroke);
+}
+.data-table td {
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--stroke);
+    vertical-align: middle;
+}
+.data-table tbody tr:hover td {
+    background: color-mix(in srgb, var(--month-color, var(--accent)) 6%, transparent);
+}
+.data-table .phone { font-variant-numeric: tabular-nums; font-weight: 600; }
+th.phone, td.phone { white-space: nowrap; }
+
+/* Разделитель дня */
+.day-row td {
+    padding: 5px 16px;
+    background: color-mix(in srgb, var(--month-color, var(--accent)) 11%, var(--surface-soft));
+    border-bottom: 1px solid var(--stroke);
+    border-top: 1px solid color-mix(in srgb, var(--month-color, var(--accent)) 22%, var(--stroke));
+}
+.day-row:first-child td { border-top: none; }
+.day-row .day-name {
+    font-weight: 700;
+    font-size: 11.5px;
+    color: color-mix(in srgb, var(--month-color, var(--accent)) 60%, var(--text));
+    letter-spacing: 0.1px;
+}
+.day-row .day-count {
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.sub-actions { text-align: right; width: 44px; }
+.sub-delete {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 5px;
+    opacity: 0.5;
+    transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.data-table tbody tr:hover .sub-delete { opacity: 1; }
+.sub-delete:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+
+/* Приглушённые цвета месяцев (Январь = 0 … Декабрь = 11) */
+.month-0  { --month-color: #5b7fb4; }
+.month-1  { --month-color: #4f9a98; }
+.month-2  { --month-color: #5a9e6f; }
+.month-3  { --month-color: #7c9a52; }
+.month-4  { --month-color: #a8923f; }
+.month-5  { --month-color: #c0824e; }
+.month-6  { --month-color: #bf6a5c; }
+.month-7  { --month-color: #b06a89; }
+.month-8  { --month-color: #8f6aad; }
+.month-9  { --month-color: #6f72b3; }
+.month-10 { --month-color: #5f86b0; }
+.month-11 { --month-color: #4f96a8; }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px dashed var(--stroke-strong);
+    border-radius: var(--radius);
+    font-size: 13px;
+}
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+#toast-container {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 200;
+}
+.toast {
+    padding: 10px 15px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-left: 3px solid var(--accent);
+    box-shadow: 0 4px 14px rgba(20, 30, 45, 0.12);
+    font-size: 13px;
+    color: var(--text);
+    max-width: 340px;
+}
+.toast.success { border-left-color: var(--success); }
+.toast.error { border-left-color: var(--danger); }
+.toast.warning { border-left-color: var(--warning); }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}
