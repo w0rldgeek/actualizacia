@@ -51,7 +51,11 @@
                 <button class="btn btn-primary field-add" id="btn-add" type="button">Добавить</button>
             </div>
             <div class="form-bottom">
-                <span class="form-hint"><kbd>Enter</kbd> в любом поле — строка добавляется и уходит в Excel.</span>
+                <div class="form-left">
+                    <span class="form-hint"><kbd>Enter</kbd> в любом поле — строка добавляется и уходит в Excel.</span>
+                    <span class="edit-flag" id="edit-flag">✎ Редактирование записи</span>
+                    <button class="btn btn-sm btn-cancel" id="btn-cancel" type="button">Отмена</button>
+                </div>
                 <input type="text" id="f-filter" class="filter-input" placeholder="Поиск по адресу / логину / номеру…">
             </div>
         </section>

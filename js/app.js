@@ -33,15 +33,21 @@
         'Четверг', 'Пятница', 'Суббота',
     ];
 
-    // Приглушённые цвета месяцев — те же, что в style.css
+    // Приглушённые цвета месяцев для Excel-вкладок/заголовков
     const MONTH_COLORS = [
         '5B7FB4', '4F9A98', '5A9E6F', '7C9A52', 'A8923F', 'C0824E',
         'BF6A5C', 'B06A89', '8F6AAD', '6F72B3', '5F86B0', '4F96A8',
+    ];
+    // Чуть светлее — для тёмной темы (страница и HTML-выгрузка), как в style.css
+    const MONTH_COLORS_DARK = [
+        '6F8FC4', '59AAA8', '67AD7D', '8AA85F', 'BBA34A', 'CF9159',
+        'CF7668', 'C07A98', '9D79BC', '7D80C2', '6E96C0', '5CA6B8',
     ];
 
     const supportsFS = typeof window.showSaveFilePicker === 'function';
     let fileHandle = null;   // привязанный .xlsx
     let fileName = null;
+    let editingId = null;    // id записи в режиме редактирования
 
     // ============================================================
     // STORE — данные (localStorage)
@@ -60,6 +66,15 @@
             return item;
         },
         remove(id) { this.save(this.all().filter(s => s.id !== id)); },
+        update(id, fields) {
+            const list = this.all();
+            const i = list.findIndex(s => s.id === id);
+            if (i === -1) return null;
+            list[i] = Object.assign({}, list[i], fields);
+            this.save(list);
+            return list[i];
+        },
+        get(id) { return this.all().find(s => s.id === id) || null; },
         replaceAll(list) {
             this.save(list.map(s => Object.assign({ id: uid() }, s)));
         },
@@ -349,27 +364,29 @@ ${rows.length ? monthsHtml(rows, { actions: false }) : '<div class="empty">Не�
         toast('HTML выгружен', 'success');
     }
 
-    // CSS для автономной HTML-выгрузки (та же спокойная палитра)
+    // CSS для автономной HTML-выгрузки — тёмная тема, как на странице
     const EXPORT_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;font-size:13px;color:#1f2733;background:#eef1f5;line-height:1.45;padding:24px}
-.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-.head{padding:4px 2px}
-.head h1{font-size:18px;font-weight:700;letter-spacing:-.2px}
-.head .meta{font-size:12px;color:#8a94a3;margin-top:4px}
-.empty{padding:40px;text-align:center;color:#8a94a3;background:#fff;border:1px dashed #d2d8e0;border-radius:10px}
-.month-card{background:#fff;border:1px solid #e3e7ec;border-left:3px solid var(--mc,#3f6491);border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,45,.06)}
-.month-card-header{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid #e3e7ec;background:color-mix(in srgb,var(--mc,#3f6491) 8%,#fff)}
-.month-card-header h3{font-size:13.5px;font-weight:700;color:color-mix(in srgb,var(--mc,#3f6491) 70%,#1f2733)}
-.month-total{padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:color-mix(in srgb,var(--mc,#3f6491) 16%,transparent);color:color-mix(in srgb,var(--mc,#3f6491) 65%,#1f2733)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{text-align:left;padding:7px 16px;color:#8a94a3;font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;background:#f7f8fa;border-bottom:1px solid #e3e7ec}
-td{padding:6px 16px;border-bottom:1px solid #e3e7ec}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;font-size:13.5px;color:#ecedf5;background:#0b0b14;line-height:1.5;padding:28px;
+background-image:radial-gradient(60vw 60vw at 12% -10%,rgba(124,92,255,.18),transparent 60%),radial-gradient(50vw 50vw at 100% 0%,rgba(34,211,238,.12),transparent 55%);background-attachment:fixed}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.head{padding:2px 2px}
+.head h1{font-size:19px;font-weight:700;letter-spacing:-.3px;background:linear-gradient(120deg,#fff,#c8c9e6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head .meta{font-size:12.5px;color:#6c6e88;margin-top:5px}
+.empty{padding:44px;text-align:center;color:#6c6e88;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.18);border-radius:16px}
+.month-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:16px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(0,0,0,.7);animation:rise .36s cubic-bezier(.2,.8,.2,1) both}
+.month-card-header{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;border-bottom:1px solid rgba(255,255,255,.10);background:linear-gradient(90deg,color-mix(in srgb,var(--mc,#7c5cff) 24%,transparent),transparent 70%)}
+.month-card-header h3{font-size:15px;font-weight:700;letter-spacing:-.2px;color:var(--mc,#7c5cff)}
+.month-total{padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--mc,#7c5cff);color:#0b0b14}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;padding:10px 18px;color:#6c6e88;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid rgba(255,255,255,.10)}
+td{padding:9px 18px;border-bottom:1px solid rgba(255,255,255,.10)}
 .phone{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
-.day-row td{padding:5px 16px;background:color-mix(in srgb,var(--mc,#3f6491) 11%,#f7f8fa);border-top:1px solid color-mix(in srgb,var(--mc,#3f6491) 22%,#e3e7ec)}
-.day-name{font-weight:700;font-size:11.5px;color:color-mix(in srgb,var(--mc,#3f6491) 60%,#1f2733)}
-.day-count{margin-left:8px;font-size:11px;font-weight:600;color:#8a94a3}
-${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
+.day-row td{padding:7px 18px;background:color-mix(in srgb,var(--mc,#7c5cff) 14%,transparent);border-top:1px solid color-mix(in srgb,var(--mc,#7c5cff) 30%,transparent)}
+.day-name{font-weight:700;font-size:12px;color:color-mix(in srgb,var(--mc,#7c5cff) 55%,#ecedf5)}
+.day-count{margin-left:8px;font-size:11px;font-weight:600;color:#6c6e88}
+${MONTH_COLORS_DARK.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
 `;
 
     // ============================================================
@@ -395,11 +412,14 @@ ${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
                     `<span class="day-name">${escapeHtml(dayLabel(dg.date))}</span>` +
                     `<span class="day-count">${dg.items.length}</span></td></tr>`;
                 const rws = dg.items.map(s => `
-                    <tr>
+                    <tr${withActions && s.id === editingId ? ' class="is-editing"' : ''}>
                         <td>${escapeHtml(s.address)}</td>
                         <td>${escapeHtml(s.login)}</td>
                         <td class="phone">${escapeHtml(s.phone)}</td>
-                        ${withActions ? `<td class="sub-actions"><button class="sub-delete" data-id="${s.id}" title="Удалить">✕</button></td>` : ''}
+                        ${withActions ? `<td class="sub-actions">` +
+                            `<button class="row-btn row-edit" data-id="${s.id}" title="Редактировать">✎</button>` +
+                            `<button class="row-btn row-delete" data-id="${s.id}" title="Удалить">✕</button>` +
+                        `</td>` : ''}
                     </tr>`).join('');
                 return sep + rws;
             }).join('');
@@ -463,9 +483,13 @@ ${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
 
         container.innerHTML = monthsHtml(rows, { actions: true });
 
-        container.querySelectorAll('.sub-delete').forEach(btn => {
+        container.querySelectorAll('.row-edit').forEach(btn => {
+            btn.addEventListener('click', () => startEdit(btn.dataset.id));
+        });
+        container.querySelectorAll('.row-delete').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (confirm('Удалить запись абонента?')) {
+                    if (btn.dataset.id === editingId) cancelEdit();
                     Store.remove(btn.dataset.id);
                     toast('Удалено', 'success');
                     render();
@@ -476,9 +500,9 @@ ${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
     }
 
     // ============================================================
-    // Добавление записи → сразу в Excel
+    // Добавление / редактирование записи → сразу в Excel
     // ============================================================
-    function tryAutoAdd(opts) {
+    function submitForm(opts) {
         opts = opts || {};
         const address = document.getElementById('f-address').value.trim();
         const login = document.getElementById('f-login').value.trim();
@@ -491,15 +515,57 @@ ${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
         }
         if (!date) date = todayISO();
 
-        Store.add({ address, login, phone, date });
+        if (editingId) {
+            Store.update(editingId, { address, login, phone, date });
+            exitEditMode();
+            clearForm();
+            render();
+            saveExcel({ notify: true });
+            toast('Запись обновлена', 'success');
+            return;
+        }
 
+        Store.add({ address, login, phone, date });
+        clearForm();
+        if (opts.focus) document.getElementById('f-address').focus();
+        render();
+        saveExcel({ notify: true });
+    }
+
+    function clearForm() {
         document.getElementById('f-address').value = '';
         document.getElementById('f-login').value = '';
         document.getElementById('f-phone').value = '';
-        if (opts.focus) document.getElementById('f-address').focus();
+        document.getElementById('f-date').value = todayISO();
+    }
 
+    // Начать редактирование: переносим запись в форму
+    function startEdit(id) {
+        const s = Store.get(id);
+        if (!s) return;
+        editingId = id;
+        document.getElementById('f-address').value = s.address || '';
+        document.getElementById('f-login').value = s.login || '';
+        document.getElementById('f-phone').value = s.phone || '';
+        document.getElementById('f-date').value = (s.date || todayISO()).slice(0, 10);
+
+        document.querySelector('.card').classList.add('editing');
+        document.getElementById('btn-add').textContent = 'Сохранить';
+        document.getElementById('f-address').focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        render(); // подсветить редактируемую строку
+    }
+
+    function exitEditMode() {
+        editingId = null;
+        document.querySelector('.card').classList.remove('editing');
+        document.getElementById('btn-add').textContent = 'Добавить';
+    }
+
+    function cancelEdit() {
+        exitEditMode();
+        clearForm();
         render();
-        saveExcel({ notify: true });
     }
 
     // ============================================================
@@ -678,7 +744,8 @@ ${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
     function init() {
         document.getElementById('f-date').value = todayISO();
 
-        document.getElementById('btn-add').addEventListener('click', () => tryAutoAdd({ focus: true, notify: true }));
+        document.getElementById('btn-add').addEventListener('click', () => submitForm({ focus: true, notify: true }));
+        document.getElementById('btn-cancel').addEventListener('click', cancelEdit);
         document.getElementById('btn-link').addEventListener('click', linkExcel);
         document.getElementById('btn-export-xlsx').addEventListener('click', () => saveExcel({ download: true }));
         document.getElementById('btn-export-html').addEventListener('click', exportHtml);
@@ -697,7 +764,10 @@ ${MONTH_COLORS.map((c, i) => `.month-${i}{--mc:#${c}}`).join('')}
             document.getElementById(id).addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    tryAutoAdd({ focus: true, notify: true });
+                    submitForm({ focus: true, notify: true });
+                } else if (e.key === 'Escape' && editingId) {
+                    e.preventDefault();
+                    cancelEdit();
                 }
             });
         });

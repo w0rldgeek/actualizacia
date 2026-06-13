@@ -1,30 +1,32 @@
 /* ============================================================
-   Актуализация номеров абонентов — рабочий интерфейс
-   Спокойная светлая тема, компактная вёрстка, приглушённые
-   цвета месяцев (различимы, но не кричат). Разделение по дням.
+   Актуализация номеров абонентов — тёмный интерфейс
+   Glassmorphism, плавные анимации, приглушённые (но различимые)
+   цвета месяцев. Компактная подача, разделение по дням.
    ============================================================ */
 
 :root {
-    --bg: #eef1f5;
-    --surface: #ffffff;
-    --surface-soft: #f7f8fa;
-    --stroke: #e3e7ec;
-    --stroke-strong: #d2d8e0;
+    /* Палитра */
+    --bg: #0b0b14;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-strong: rgba(255, 255, 255, 0.07);
+    --stroke: rgba(255, 255, 255, 0.10);
+    --stroke-strong: rgba(255, 255, 255, 0.18);
 
-    --text: #1f2733;
-    --text-dim: #5a6675;
-    --text-muted: #8a94a3;
+    --text: #ecedf5;
+    --text-dim: #a4a6bd;
+    --text-muted: #6c6e88;
 
-    --accent: #3f6491;          /* спокойный синий — основной */
-    --accent-soft: #eef2f7;
+    --brand-1: #7c5cff;
+    --brand-2: #22d3ee;
+    --brand-grad: linear-gradient(120deg, var(--brand-1), var(--brand-2));
 
-    --success: #4f8a6b;
-    --danger: #b4544f;
-    --warning: #b08a3e;
+    --success: #34d399;
+    --danger: #fb7185;
+    --warning: #fbbf24;
 
-    --radius: 10px;
-    --radius-sm: 7px;
-    --shadow: 0 1px 2px rgba(20, 30, 45, 0.06), 0 1px 3px rgba(20, 30, 45, 0.05);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.7);
 
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -35,12 +37,18 @@ html { scroll-behavior: smooth; }
 
 body {
     font-family: var(--font);
-    font-size: 13.5px;
-    line-height: 1.45;
+    font-size: 14px;
+    line-height: 1.5;
     color: var(--text);
     background: var(--bg);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    /* Современный фон: мягкие цветовые «пятна» */
+    background-image:
+        radial-gradient(60vw 60vw at 12% -10%, rgba(124, 92, 255, 0.20), transparent 60%),
+        radial-gradient(50vw 50vw at 100% 0%, rgba(34, 211, 238, 0.14), transparent 55%),
+        radial-gradient(40vw 40vw at 50% 120%, rgba(244, 114, 182, 0.10), transparent 60%);
+    background-attachment: fixed;
 }
 
 /* ============================================================
@@ -50,33 +58,39 @@ body {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: var(--surface);
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--stroke);
 }
 .topbar-inner {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 10px 22px;
+    padding: 12px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 14px;
     flex-wrap: wrap;
 }
-.brand { display: flex; align-items: center; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
-    width: 10px; height: 22px;
-    border-radius: 3px;
-    background: var(--accent);
+    width: 12px; height: 26px;
+    border-radius: 5px;
+    background: var(--brand-grad);
+    box-shadow: 0 8px 24px -8px var(--brand-1);
 }
 .brand-text {
-    font-size: 15px;
+    font-size: clamp(15px, 2.4vw, 18px);
     font-weight: 700;
-    letter-spacing: -0.2px;
-    color: var(--text);
+    letter-spacing: -0.4px;
+    background: linear-gradient(120deg, #fff, #c8c9e6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 .topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-group { display: flex; gap: 7px; flex-wrap: wrap; }
 
 /* ============================================================
    LAYOUT
@@ -84,21 +98,25 @@ body {
 .container {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 20px 22px 60px;
+    padding: 24px 24px 64px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
 }
 
 /* ============================================================
-   CARD
+   GLASS CARD
    ============================================================ */
 .card {
+    position: relative;
     background: var(--surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
     border: 1px solid var(--stroke);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 16px 18px;
+    padding: 18px 20px;
+    animation: rise 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* ============================================================
@@ -106,34 +124,36 @@ body {
    ============================================================ */
 .subscriber-form {
     display: grid;
-    grid-template-columns: 2.2fr 1.2fr 150px 1.2fr auto;
-    gap: 12px;
+    grid-template-columns: 2.2fr 1.2fr 160px 1.2fr auto;
+    gap: 14px;
     align-items: end;
 }
-.field { display: flex; flex-direction: column; gap: 5px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
 .field label {
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-dim);
 }
 input[type="text"], input[type="date"] {
     width: 100%;
-    padding: 9px 11px;
-    background: var(--surface);
-    border: 1px solid var(--stroke-strong);
+    padding: 10px 13px;
+    background: var(--surface-strong);
+    border: 1px solid var(--stroke);
     border-radius: var(--radius-sm);
     color: var(--text);
     font-family: var(--font);
-    font-size: 13.5px;
+    font-size: 14px;
     outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 input::placeholder { color: var(--text-muted); }
 input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--brand-1) 70%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-1) 22%, transparent);
+    background: color-mix(in srgb, var(--surface-strong) 80%, var(--brand-1) 6%);
 }
-.field-add { height: 38px; }
+input[type="date"] { color-scheme: dark; }
+.field-add { height: 40px; }
 
 .form-bottom {
     display: flex;
@@ -141,21 +161,39 @@ input:focus {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    margin-top: 12px;
-    padding-top: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
     border-top: 1px solid var(--stroke);
 }
-.form-hint { font-size: 12px; color: var(--text-muted); }
+.form-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.form-hint { font-size: 12.5px; color: var(--text-muted); }
 .form-hint kbd {
     font-family: var(--font);
     font-size: 11px;
-    padding: 1px 6px;
-    border-radius: 5px;
-    background: var(--surface-soft);
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: var(--surface-strong);
     border: 1px solid var(--stroke-strong);
     color: var(--text-dim);
 }
-.filter-input { max-width: 340px; flex: 1; min-width: 200px; }
+.filter-input { max-width: 320px; flex: 1; min-width: 200px; }
+
+/* Режим редактирования формы */
+.card.editing {
+    border-color: color-mix(in srgb, var(--brand-2) 50%, transparent);
+    box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--brand-2) 35%, transparent);
+}
+.edit-flag {
+    display: none;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand-2);
+}
+.card.editing .edit-flag { display: inline-flex; animation: rise 0.25s ease both; }
+.btn-cancel { display: none; }
+.card.editing .btn-cancel { display: inline-flex; }
 
 @media (max-width: 920px) {
     .subscriber-form { grid-template-columns: 1fr 1fr; }
@@ -173,46 +211,49 @@ input:focus {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border: 1px solid var(--stroke-strong);
+    gap: 7px;
+    padding: 9px 16px;
+    border: 1px solid var(--stroke);
     border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text-dim);
+    background: var(--surface-strong);
+    color: var(--text);
     font-family: var(--font);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    backdrop-filter: blur(8px);
+    transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
-.btn:hover { background: var(--surface-soft); border-color: var(--text-muted); color: var(--text); }
-.btn:active { transform: translateY(0.5px); }
+.btn:hover { border-color: var(--stroke-strong); background: var(--surface); transform: translateY(-1px); }
+.btn:active { transform: translateY(1px) scale(0.99); }
 .btn-primary {
     color: #fff;
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--brand-grad);
+    border-color: transparent;
+    box-shadow: 0 10px 26px -10px var(--brand-1);
 }
-.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); border-color: transparent; color: #fff; }
+.btn-primary:hover { box-shadow: 0 14px 32px -10px var(--brand-1); transform: translateY(-1px); }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
 
 /* ============================================================
-   BADGE / STATUS
+   BADGE
    ============================================================ */
 .badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 11px;
+    padding: 6px 12px;
     border-radius: 999px;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
-    background: var(--surface-soft);
+    background: var(--surface-strong);
     border: 1px solid var(--stroke);
     color: var(--text-dim);
 }
 .badge.linked {
-    background: color-mix(in srgb, var(--success) 12%, transparent);
-    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+    background: color-mix(in srgb, var(--success) 16%, transparent);
+    border-color: color-mix(in srgb, var(--success) 40%, transparent);
     color: var(--success);
 }
 
@@ -223,85 +264,91 @@ input:focus {
     display: flex;
     gap: 18px;
     flex-wrap: wrap;
-    padding: 2px 2px;
+    padding: 0 4px;
     font-size: 12.5px;
     color: var(--text-dim);
+    animation: rise 0.3s ease both;
 }
 .summary b { color: var(--text); font-weight: 700; }
 
 /* ============================================================
    MONTH CARDS + TABLE
    ============================================================ */
-#table-container { display: flex; flex-direction: column; gap: 14px; }
+#table-container { display: flex; flex-direction: column; gap: 16px; }
 
 .month-card {
     background: var(--surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
     border: 1px solid var(--stroke);
-    border-left: 3px solid var(--month-color, var(--accent));
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
+    animation: rise 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .month-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 9px 16px;
-    background: color-mix(in srgb, var(--month-color, var(--accent)) 8%, var(--surface));
+    padding: 13px 20px;
     border-bottom: 1px solid var(--stroke);
+    background:
+        linear-gradient(90deg,
+            color-mix(in srgb, var(--month-color, var(--brand-1)) 24%, transparent),
+            transparent 70%);
 }
 .month-card-header h3 {
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.1px;
-    color: color-mix(in srgb, var(--month-color, var(--accent)) 70%, var(--text));
+    letter-spacing: -0.2px;
+    color: var(--month-color, var(--brand-1));
 }
 .month-total {
     display: inline-flex;
     align-items: center;
-    padding: 2px 9px;
+    padding: 3px 11px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
-    background: color-mix(in srgb, var(--month-color, var(--accent)) 16%, transparent);
-    color: color-mix(in srgb, var(--month-color, var(--accent)) 65%, var(--text));
+    background: var(--month-color, var(--brand-1));
+    color: #0b0b14;
 }
 
-.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .data-table thead th {
     text-align: left;
-    padding: 7px 16px;
+    padding: 10px 18px;
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 10.5px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: var(--surface-soft);
+    letter-spacing: 0.6px;
     border-bottom: 1px solid var(--stroke);
 }
 .data-table td {
-    padding: 6px 16px;
+    padding: 9px 18px;
     border-bottom: 1px solid var(--stroke);
     vertical-align: middle;
 }
+.data-table tbody tr { transition: background 0.15s ease; }
 .data-table tbody tr:hover td {
-    background: color-mix(in srgb, var(--month-color, var(--accent)) 6%, transparent);
+    background: color-mix(in srgb, var(--month-color, var(--brand-1)) 9%, transparent);
 }
 .data-table .phone { font-variant-numeric: tabular-nums; font-weight: 600; }
 th.phone, td.phone { white-space: nowrap; }
 
 /* Разделитель дня */
 .day-row td {
-    padding: 5px 16px;
-    background: color-mix(in srgb, var(--month-color, var(--accent)) 11%, var(--surface-soft));
+    padding: 7px 18px;
+    background: color-mix(in srgb, var(--month-color, var(--brand-1)) 14%, transparent);
     border-bottom: 1px solid var(--stroke);
-    border-top: 1px solid color-mix(in srgb, var(--month-color, var(--accent)) 22%, var(--stroke));
+    border-top: 1px solid color-mix(in srgb, var(--month-color, var(--brand-1)) 30%, transparent);
 }
 .day-row:first-child td { border-top: none; }
 .day-row .day-name {
     font-weight: 700;
-    font-size: 11.5px;
-    color: color-mix(in srgb, var(--month-color, var(--accent)) 60%, var(--text));
+    font-size: 12px;
+    color: color-mix(in srgb, var(--month-color, var(--brand-1)) 55%, var(--text));
     letter-spacing: 0.1px;
 }
 .day-row .day-count {
@@ -311,47 +358,51 @@ th.phone, td.phone { white-space: nowrap; }
     color: var(--text-muted);
 }
 
-.sub-actions { text-align: right; width: 44px; }
-.sub-delete {
+.sub-actions { text-align: right; width: 86px; white-space: nowrap; }
+.row-btn {
     border: none;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
     font-size: 13px;
     line-height: 1;
-    padding: 4px 6px;
-    border-radius: 5px;
+    padding: 5px 7px;
+    border-radius: 7px;
     opacity: 0.5;
     transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.data-table tbody tr:hover .sub-delete { opacity: 1; }
-.sub-delete:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.data-table tbody tr:hover .row-btn { opacity: 1; }
+.row-edit:hover { color: var(--brand-2); background: color-mix(in srgb, var(--brand-2) 14%, transparent); }
+.row-delete:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.data-table tbody tr.is-editing td {
+    background: color-mix(in srgb, var(--brand-2) 12%, transparent);
+}
 
 /* Приглушённые цвета месяцев (Январь = 0 … Декабрь = 11) */
-.month-0  { --month-color: #5b7fb4; }
-.month-1  { --month-color: #4f9a98; }
-.month-2  { --month-color: #5a9e6f; }
-.month-3  { --month-color: #7c9a52; }
-.month-4  { --month-color: #a8923f; }
-.month-5  { --month-color: #c0824e; }
-.month-6  { --month-color: #bf6a5c; }
-.month-7  { --month-color: #b06a89; }
-.month-8  { --month-color: #8f6aad; }
-.month-9  { --month-color: #6f72b3; }
-.month-10 { --month-color: #5f86b0; }
-.month-11 { --month-color: #4f96a8; }
+.month-0  { --month-color: #6f8fc4; }
+.month-1  { --month-color: #59aaa8; }
+.month-2  { --month-color: #67ad7d; }
+.month-3  { --month-color: #8aa85f; }
+.month-4  { --month-color: #bba34a; }
+.month-5  { --month-color: #cf9159; }
+.month-6  { --month-color: #cf7668; }
+.month-7  { --month-color: #c07a98; }
+.month-8  { --month-color: #9d79bc; }
+.month-9  { --month-color: #7d80c2; }
+.month-10 { --month-color: #6e96c0; }
+.month-11 { --month-color: #5ca6b8; }
 
 /* ============================================================
    EMPTY STATE
    ============================================================ */
 .empty-state {
-    padding: 40px 24px;
+    padding: 48px 28px;
     text-align: center;
     color: var(--text-muted);
     background: var(--surface);
     border: 1px dashed var(--stroke-strong);
     border-radius: var(--radius);
-    font-size: 13px;
+    animation: rise 0.3s ease both;
 }
 
 /* ============================================================
@@ -359,24 +410,33 @@ th.phone, td.phone { white-space: nowrap; }
    ============================================================ */
 #toast-container {
     position: fixed;
-    bottom: 20px; right: 20px;
-    display: flex; flex-direction: column; gap: 8px;
+    bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 10px;
     z-index: 200;
 }
 .toast {
-    padding: 10px 15px;
-    border-radius: 8px;
-    background: var(--surface);
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--bg) 60%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border: 1px solid var(--stroke);
-    border-left: 3px solid var(--accent);
-    box-shadow: 0 4px 14px rgba(20, 30, 45, 0.12);
-    font-size: 13px;
-    color: var(--text);
-    max-width: 340px;
+    box-shadow: var(--shadow);
+    font-size: 13.5px;
+    border-left: 3px solid var(--brand-1);
+    animation: rise 0.25s ease both;
 }
 .toast.success { border-left-color: var(--success); }
 .toast.error { border-left-color: var(--danger); }
 .toast.warning { border-left-color: var(--warning); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
